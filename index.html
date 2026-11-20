@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#050a0e" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061018'/%3E%3Cpath d='M32 12l7 16 15 8-15 4-7 14-7-14-15-4 15-8z' fill='%2348e0d0'/%3E%3C/svg%3E" />
+<title>پرواز شاهد — شبیه‌ساز عملیات پهپاد رزمی</title>
+<meta name="description" content="بازی تحت‌وب پرواز شاهد: هدایت پهپاد رزمی، قفل روی اهداف و دفاع از پایگاه در آسمان غروب." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app">
+  <div class="frame" id="frame">
+    <div class="stage" id="stage">
+      <canvas id="scene" aria-label="صحنه بازی"></canvas>
+      <div class="fx fx--scan" aria-hidden="true"></div>
+      <div class="fx fx--vignette" aria-hidden="true"></div>
+
+      <!-- ================= HUD ================= -->
+      <div id="hud" dir="rtl">
+        <div class="hud-top">
+          <div class="card card--mission">
+            <div class="card__row">
+              <span class="tag">عملیات <b id="missionNo">۱</b></span>
+              <span class="tag tag--dim">پایگاه <b id="baseTxt">۱۰۰٪</b></span>
+            </div>
+            <div class="bar bar--mission"><i id="missionBar"></i></div>
+            <div class="card__row card__row--sub">
+              <span id="missionTxt">۰ از ۲۲ هدف</span>
+              <span id="escapedTxt" class="muted">فرار: ۰</span>
+            </div>
+          </div>
+
+          <div class="card card--score">
+            <div class="card__row card__row--sub"><span class="tag tag--dim">امتیاز</span></div>
+            <div class="score" id="scoreVal">۰</div>
+            <div class="combo" id="comboVal"></div>
+          </div>
+        </div>
+
+        <div class="hud-bottom">
+          <div class="card card--vitals">
+            <div class="card__row">
+              <span class="tag">سلامت پهپاد</span>
+              <span class="tag tag--dim"><b id="hpTxt">۱۰۰</b>٪</span>
+            </div>
+            <div class="bar bar--hp"><i id="hpBar"></i></div>
+            <div class="card__row card__row--sub">
+              <span class="chips">
+                <span class="chip" id="shieldTag">سپر: خاموش</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="hud-center">
+            <button class="special" id="specialBtn" title="موشک نقطه‌زن (F)">
+              <span class="special__fill" id="specialFill"></span>
+              <span class="special__label">موشک نقطه‌زن</span>
+              <span class="special__key">F</span>
+            </button>
+            <div class="utils">
+              <button class="icon-btn" id="btnMute" title="صدا (M)">🔊</button>
+              <button class="icon-btn" id="btnPause" title="توقف (P)">⏸</button>
+              <button class="icon-btn" id="btnFull" title="تمام‌صفحه">⛶</button>
+            </div>
+          </div>
+
+          <div class="card card--weapon">
+            <div class="card__row">
+              <span class="tag">مهمات</span>
+              <span class="tag tag--dim"><b id="ammoTxt">۲۲۰</b></span>
+            </div>
+            <div class="bar bar--ammo"><i id="ammoBar"></i></div>
+            <div class="card__row card__row--sub">
+              <span class="muted">حرارت</span>
+              <span class="muted" id="heatTxt">۰٪</span>
+            </div>
+            <div class="bar bar--heat" id="heatWrap"><i id="heatBar"></i></div>
+          </div>
+        </div>
+
+        <div class="hints" id="hints">
+          <span>حرکت: ماوس / لمس</span>
+          <span>شلیک: کلیک یا نگه‌داشتن</span>
+          <span>موشک: F</span>
+          <span>توقف: P</span>
+        </div>
+      </div>
+
+      <!-- ================= MENU ================= -->
+      <div class="screen screen--menu" id="screenMenu">
+        <div class="menu">
+          <div class="brand">
+            <div class="brand__tag">شبیه‌ساز عملیات پهپاد رزمی</div>
+            <h1 class="brand__title">پرواز شاهد</h1>
+            <p class="brand__sub">هدایت پهپاد، قفل روی اهداف و دفاع از پایگاه در آسمان غروب</p>
+          </div>
+          <div class="menu__actions">
+            <button class="btn btn--primary" id="btnStart">شروع عملیات</button>
+            <button class="btn" id="btnHelp">راهنمای کنترل</button>
+            <button class="btn btn--ghost" id="btnSound">صدا: روشن</button>
+          </div>
+          <div class="menu__meta">
+            <span>بهترین امتیاز: <b id="bestMenu">۰</b></span>
+            <span class="dot"></span>
+            <span>حالت: <b>عملیاتی</b></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= HELP ================= -->
+      <div class="screen screen--modal hidden" id="screenHelp">
+        <div class="modal">
+          <h2 class="modal__title">راهنمای کنترل</h2>
+          <div class="grid">
+            <div class="hint">
+              <div class="hint__k">ماوس</div>
+              <div class="hint__v">حرکت ماوس برای هدایت پهپاد، نگه‌داشتن کلیک برای شلیک</div>
+            </div>
+            <div class="hint">
+              <div class="hint__k">لمس</div>
+              <div class="hint__v">انگشت را روی صحنه بکشید؛ پهپاد دنبال انگشت می‌رود و شلیک می‌کند</div>
+            </div>
+            <div class="hint">
+              <div class="hint__k">کلیدها</div>
+              <div class="hint__v">جهت‌ها یا A/D برای حرکت، Space برای شلیک، F موشک نقطه‌زن، P توقف</div>
+            </div>
+            <div class="hint">
+              <div class="hint__k">حرارت</div>
+              <div class="hint__v">شلیک ممتد توپ را داغ می‌کند؛ رها کنید تا خنک شود، وگرنه قفل می‌شود</div>
+            </div>
+            <div class="hint">
+              <div class="hint__k">اهداف</div>
+              <div class="hint__v">هر هدفی که از منطقه بگذرد به پایگاه آسیب می‌زند؛ همه را قبل از رسیدن بزنید</div>
+            </div>
+            <div class="hint">
+              <div class="hint__k">جعبه‌ها</div>
+              <div class="hint__v">مهمات، تعمیر، سپر و خنک‌کننده روی مسیر ظاهر می‌شوند؛ با پهپاد از رویشان رد شوید</div>
+            </div>
+          </div>
+          <button class="btn btn--primary" id="btnHelpClose">فهمیدم</button>
+        </div>
+      </div>
+
+      <!-- ================= PAUSE ================= -->
+      <div class="screen screen--modal hidden" id="screenPause">
+        <div class="modal modal--sm">
+          <h2 class="modal__title">توقف عملیات</h2>
+          <p class="modal__sub">سیستم در حالت آماده‌باش است.</p>
+          <div class="modal__actions">
+            <button class="btn btn--primary" id="btnResume">ادامه</button>
+            <button class="btn" id="btnRestart">شروع دوباره</button>
+            <button class="btn btn--ghost" id="btnMenu">بازگشت به منو</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= GAME OVER ================= -->
+      <div class="screen screen--modal hidden" id="screenOver">
+        <div class="modal">
+          <h2 class="modal__title" id="overTitle">عملیات پایان یافت</h2>
+          <p class="modal__sub" id="overReason">پهپاد سرنگون شد.</p>
+          <div class="stats">
+            <div class="stat"><span>امتیاز</span><b id="statScore">۰</b></div>
+            <div class="stat"><span>بهترین</span><b id="statBest">۰</b></div>
+            <div class="stat"><span>اهداف منهدم</span><b id="statKills">۰</b></div>
+            <div class="stat"><span>دقت</span><b id="statAcc">۰٪</b></div>
+            <div class="stat"><span>عملیات</span><b id="statMission">۱</b></div>
+          </div>
+          <div class="modal__actions">
+            <button class="btn btn--primary" id="btnAgain">تلاش دوباره</button>
+            <button class="btn btn--ghost" id="btnHome">بازگشت به منو</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/sfx.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
